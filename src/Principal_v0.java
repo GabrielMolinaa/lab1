@@ -1,5 +1,5 @@
 /**
- * Lab0: Leitura de Base de Dados N�o-Distribuida
+ * Lab0: Leitura de Base de Dados N�o-Distribuida
  * 
  * Autor: Lucio A. Rocha
  * Ultima atualizacao: 20/02/2023
@@ -10,6 +10,8 @@
  */
 
 import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.SecureRandom;
@@ -22,9 +24,7 @@ import java.util.Set;
 
 public class Principal_v0 {
 
-	public final static Path path = Paths			
-			.get("src\\fortune-br.txt");
-	private int NUM_FORTUNES = 0;
+	public final static Path path = Paths.get("lab1\\src\\fortune-br.txt");
 
 	public class FileReader {
 
@@ -81,7 +81,6 @@ public class Principal_v0 {
 					hm.put(lineCount, fortune.toString());
 					System.out.println(fortune.toString());
 
-					System.out.println(lineCount);
 				}// fim while
 
 			} catch (IOException e) {
@@ -89,16 +88,57 @@ public class Principal_v0 {
 			}
 		}
 
-		public void read(HashMap<Integer, String> hm)
-				throws FileNotFoundException {
+        public void read(HashMap<Integer, String> hm) throws FileNotFoundException {
+            int totalFortunes = hm.size();
 
-			//SEU CODIGO AQUI
+			//Sorteando a fortuna que será lida
+            SecureRandom random = new SecureRandom();
+            int randomIndex = random.nextInt(totalFortunes);
+			
+			InputStream is = new BufferedInputStream(new FileInputStream(path.toString()));
+			try (BufferedReader br = new BufferedReader(new InputStreamReader(is))){
+				
+				int lineCount = 0;
+				String line = "";
+				while (!(line == null)) {
+
+					if (line.equals("%"))
+						lineCount++;
+					
+					line = br.readLine();
+					if(lineCount == randomIndex){
+						StringBuffer fortune = new StringBuffer();
+						while (!(line == null) && !line.equals("%")) {
+							fortune.append(line + "\n");
+							line = br.readLine();
+						}
+
+						System.out.println("\nFortuna Sorteada: "+randomIndex);
+						System.out.println(fortune.toString());
+						break;
+					}
+				}// fim while			
+			
+			}catch (IOException e) {
+                System.err.println("ERRO NA LEITURA.");
+            }
+
 		}
+    
 
-		public void write(HashMap<Integer, String> hm)
-				throws FileNotFoundException {
+		public void write(HashMap<Integer, String> hm) throws FileNotFoundException {
 
-			//SEU CODIGO AQUI
+			String minhaFortuna = "Quem é rico faz o PIX!\n \t--Edinaldo Pereira";
+			String marcador = "\n%\n";
+			OutputStream is = new BufferedOutputStream(new FileOutputStream(path.toString(),true));
+			try(BufferedWriter br = new BufferedWriter(new OutputStreamWriter(is))){
+
+				br.write(marcador,0,marcador.length());
+				br.write(minhaFortuna,0,minhaFortuna.length());
+
+			} catch(IOException e){
+				System.err.println("ERRO NA ESCRITA.");
+			}
 		}
 	}
 
@@ -106,8 +146,8 @@ public class Principal_v0 {
 
 		FileReader fr = new FileReader();
 		try {
-			NUM_FORTUNES = fr.countFortunes();
-			HashMap hm = new HashMap<Integer, String>();
+			fr.countFortunes();
+			HashMap<Integer, String> hm = new HashMap<Integer, String>();
 			fr.parser(hm);
 			fr.read(hm);
 			fr.write(hm);
